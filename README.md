@@ -260,3 +260,39 @@ command restores it from `.hackbot/hackbot.sql`.
   at a time.
 - Project code lives in this repository. Bug bounty data lives in
   `~/BugBounty` and is versioned separately.
+
+## Optional orchestration ideas (not planned)
+
+The current scope is intentionally narrower: `hackbot` stores and queries
+bug bounty data. It is not an agent orchestrator, and it does not need to become
+one now. The ideas below were considered and are documented for future
+reference only.
+
+- **Task/work-item model.** Add tasks with target, phase, kind, payload,
+  priority, dependencies, status, attempts, and evidence.
+- **Transactional claim and lease.** Let agents claim work atomically, renew a
+  lease with a heartbeat, and release or expire it so two agents cannot do the
+  same task.
+- **Context packet.** Return only the state an agent needs for one task:
+  scope, relevant assets/endpoints, prior tests, evidence, and constraints.
+- **Next work selector.** Rank claimable tasks by phase, priority, blockers, and
+  coverage gaps.
+- **Gate engine.** Run a task or phase check, record the output, and block
+  advancement on failure.
+- **Event log and resume.** Append task events so a crashed or new agent can
+  reconstruct the next action.
+- **Adapter contract.** Let external commands receive a task/context as JSON and
+  return a result/evidence as JSON; hackbot records the result and never
+  executes recon itself.
+- **MCP/CLI interface.** Expose claim, next, context, complete, and gate
+  operations to any agent harness.
+
+These are not implemented because the present need is durable storage, fast
+lookups, and Git sync, not autonomous scheduling. Adding a scheduler, leases,
+and gates would add complexity without a current payoff. Execution logic
+(recon, browser, proxy, registration, target-specific prompts) should stay
+outside this repository.
+
+If the scope changes later, build in this order: task model and atomic
+claim/lease first, then context/next, then the gate engine and event log, then
+the MCP/CLI interface.
